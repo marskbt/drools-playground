@@ -1,0 +1,73 @@
+package com.fosun.fact.d391;
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSON;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+function  Boolean doValidationD391(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+   Logger.info(" 执行  D391");
+    if(!Tools.isRuleCodeOK(ruleCode,"D391")){
+        return Boolean.FALSE;
+    }
+    
+    String companyName = "";
+    JSONObject creditCommonRequestBody = paramDataDTO.getCreditCommonRequestBody();
+    if(creditCommonRequestBody!=null){
+        companyName = creditCommonRequestBody.getString("companyName");
+    }
+
+    if(!ruleDataSourceMap.isEmpty()){
+       RuleDataSourceDTO fhDataSource = (RuleDataSourceDTO)ruleDataSourceMap.get("FHCompanyKtgg");
+       JSONArray array = (JSONArray)fhDataSource.getDsRes();
+      
+       if (array==null&&array.size()<=0){
+            return Boolean.FALSE;
+       }
+       for (int i=0;i<array.size();i++){
+           Boolean flag = Boolean.FALSE;
+           Boolean checkFlag = Boolean.FALSE;
+           JSONObject jsonObject = array.getJSONObject(i);
+           String dataType = jsonObject.getString("dataType");
+           if("ktgg".equals(dataType)){
+            String sortTimeString = jsonObject.getString("sortTimeString");
+            if(sortTimeString!=null && (!"".equals(sortTimeString))){
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+                Date sortTime = sdf.parse(sortTimeString);
+                Date nowTime = new Date();
+                flag = Tools.getMonthSpace(sortTime,nowTime) <= 6;
+            }
+             String pname = jsonObject.getString("pname");
+             if(pname!=null && pname.contains(companyName)){
+                checkFlag = Boolean.TRUE;
+            }
+            if(checkFlag && flag){
+                return Boolean.TRUE;
+            }
+          }
+       }
+    }
+
+    return Boolean.FALSE;
+}
+
+rule "D391"
+    when
+    $ruleResultDTO:RuleResultDTO();
+    $dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationD391(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+    then
+    Map extraMap = new HashMap();
+    $ruleResultDTO.setResult(Tools.HIT);
+    $ruleResultDTO.setExtraResultMap(extraMap);
+    $dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end

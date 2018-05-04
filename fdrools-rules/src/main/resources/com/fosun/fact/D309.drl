@@ -1,0 +1,34 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD309(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D309")){
+        return false;
+    }
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+    for(JSONObject obj : jsonList){
+        if(obj.get("matchRatio")!=null && obj.get("monthGap")!=null){
+             Double matchRatio = obj.getDouble("matchRatio");
+             Integer monthGap = obj.getInteger("monthGap");
+             if(matchRatio >= 0.8 && monthGap <= 6){
+                 return Boolean.TRUE;
+             }
+        }
+    }
+    return Boolean.FALSE;
+}
+
+rule "D309"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD309(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

@@ -1,0 +1,31 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationT360(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"T360")){
+        return Boolean.FALSE;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    if(obj != null && obj.getInteger("searchedOrgCnt") != null){
+        Integer searchedOrgCnt = obj.getInteger("searchedOrgCnt");
+        if(searchedOrgCnt > 0 ){
+            return Boolean.TRUE;
+        }
+    }
+    return Boolean.FALSE;
+}
+
+rule "T360"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationT360(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

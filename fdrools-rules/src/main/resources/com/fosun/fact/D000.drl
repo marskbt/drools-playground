@@ -1,0 +1,77 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+
+function Boolean doValidationD000(String ruleId,RuleParamHolderDTO ruleParamHolderDTO,RuleResultDTO resultDTO){
+   
+    if(!Tools.isRuleCodeOK(ruleId,"D000")){
+        return false;
+    }
+    JSONObject singleParam = ruleParamHolderDTO.getSoloParam();
+    List<JSONObject> arrayParam = ruleParamHolderDTO.getArrayParams();
+    
+    if(arrayParam!=null && arrayParam.size()>0){
+        for(JSONObject obj:arrayParam){
+            
+             if(obj.get("key1")!=null 
+               && obj.get("key2")!=null 
+            ){
+            Logger.info("***** 打印类型1 ***** "+obj.get("key1") +" 是 "+obj.get("key1").getClass().toString());
+            Logger.info("***** 打印类型2 ***** "+obj.get("key1") +" 是 "+(obj.get("key1")).getClass().toString());
+            if(obj.get("key1") instanceof Integer){
+                Logger.info("************ "+obj.get("key1") +" 是 Integer");
+                
+            }else if(obj.get("key1") instanceof Short){
+                 Logger.info("************ "+obj.get("key1") +" 是 Short");
+                
+            }else if(obj.get("key1") instanceof Long){
+                 Logger.info("************ "+obj.get("key1") +" 是 Long");
+                
+            }else if(obj.get("key1") instanceof Float){
+                 Logger.info("************ "+obj.get("key1") +" 是 Float");
+                
+            }else if(obj.get("key1") instanceof Double){
+                 Logger.info("************ "+obj.get("key1") +" 是 Double");
+                
+            }else if(obj.get("key1") instanceof String){
+                 Logger.info("************ "+obj.get("key1") +" 是 String");
+                
+            }else {
+                 Logger.info("************ "+obj.get("key1") +" 是 default");
+            }
+            }
+            System.out.println(obj.get("key1") +" "+ obj.get("key1"));
+            if(obj.get("key1")!=null && obj.get("key1").toString().equals("hit1")
+               && obj.get("key2")!=null && obj.get("key2").toString().equals("hit1")
+            ){
+                resultDTO.setRuleTypeName("I'm rule type name");
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
+
+rule "D000"
+when
+
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD000(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+then
+
+Map<String,Object> extraMap = new HashMap<String,Object>();
+extraMap.put("testMap",123);
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleResultDTO.setExtraResultMap(extraMap);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+System.out.println("D000 执行完成  ");
+end
+
+

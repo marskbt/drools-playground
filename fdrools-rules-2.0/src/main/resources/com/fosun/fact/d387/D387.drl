@@ -1,0 +1,61 @@
+package com.fosun.fact.d387;
+
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import com.alibaba.fastjson.JSONArray;
+
+function Boolean doValidationD387(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+   Logger.info("执行  D387");
+    if(!Tools.isRuleCodeOK(ruleCode,"D387")){
+        return Boolean.FALSE;
+    }
+    
+    if(!ruleDataSourceMap.isEmpty()){
+       RuleDataSourceDTO fhSxDataSource = (RuleDataSourceDTO)ruleDataSourceMap.get("FHCompany");
+       JSONArray array = (JSONArray)fhSxDataSource.getDsRes();
+       if(array != null && array.size()>0){
+           for(int i =0;i<array.size();i++){
+               JSONObject object = (JSONObject) array.get(i);
+               if("zxgg".equals(object.getString("dataType"))){
+               			boolean flag = Tools.validFHSortTime(object.getString("sortTimeString"), 1);
+                    if(flag){
+                        return Boolean.TRUE;
+                    }
+               }
+           }
+       }
+    }
+    
+    return Boolean.FALSE;
+}
+
+function Object doFhAddInfo(DynamicRuleInfoDTO dynamicRuleInfoDto){
+    Map ruleDataSourceMap = dynamicRuleInfoDto.getRuleDataSourceMap();
+    RuleDataSourceDTO fhSxDataSource = (RuleDataSourceDTO)ruleDataSourceMap.get("FHCompany");
+    JSONArray array = (JSONArray)fhSxDataSource.getDsRes();
+    return  Tools.getFHAddInfo(array,"zxgg",1);
+}
+
+rule "D387"
+when
+
+$ruleResultDTO:RuleResultDTO();
+$dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationD387(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+then
+
+Map<String,Object> extraMap = new HashMap<String,Object>();
+extraMap.put("ruleAddInfo",doFhAddInfo($dynamicRuleInfoDTO));
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleResultDTO.setExtraResultMap(extraMap);
+$dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end
+

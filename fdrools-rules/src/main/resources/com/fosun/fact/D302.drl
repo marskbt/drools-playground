@@ -1,0 +1,31 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD302(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D302")){
+        return Boolean.FALSE;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    if(obj != null && obj.getString("mobileOwnershipAddress") != null){
+        String mobileOwnershipAddress = obj.getString("mobileOwnershipAddress");
+        if(mobileOwnershipAddress.contains("福建") || mobileOwnershipAddress.contains("山东") || mobileOwnershipAddress.contains("内蒙古") || mobileOwnershipAddress.contains("河北")){
+            return Boolean.TRUE;
+        }
+       
+    }
+    return Boolean.FALSE;
+}
+
+rule "D302"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD302(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

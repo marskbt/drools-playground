@@ -1,0 +1,18 @@
+package com.fosun.fact;
+
+import java.util.Map;
+
+declare CommParamMapFact
+
+//统一Map入参
+paramMap:java.util.Map 
+
+
+//出参 
+result:Integer
+ruleId:String
+ruleTypeId:int
+ruleTypeName:String
+resultMsg:String
+
+end

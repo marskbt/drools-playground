@@ -1,0 +1,61 @@
+package com.fosun.fact.d375;
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+
+
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSON;
+
+function  Boolean doValidationD375(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+   Logger.info(" 执行  D375");
+    if(!Tools.isRuleCodeOK(ruleCode,"D375")){
+        return Boolean.FALSE;
+    }
+
+    if(!ruleDataSourceMap.isEmpty()){
+       RuleDataSourceDTO afDataSource = (RuleDataSourceDTO)ruleDataSourceMap.get("AF_MIXED_RISK");
+       JSONObject resObj = (JSONObject)afDataSource.getDsRes();
+       Logger.info("resObj="+JSON.toJSONString(resObj));
+       String afRiskResult = resObj.getString("resultList");
+       JSONArray array = JSON.parseArray(afRiskResult);
+       Logger.info("resObj="+JSON.toJSONString(array));
+       if (array==null&&array.size()<=0){
+            Logger.info("FALSE");
+            return Boolean.FALSE;
+       }
+       for (int i=0;i<array.size();i++){
+           JSONObject jsonObject = array.getJSONObject(i);
+          Logger.info("resObj="+JSON.toJSONString(jsonObject));
+           String riskDetailCode = jsonObject.getString("riskDetailCode");
+           int riskTime = jsonObject.getInteger("riskTime");
+           Logger.info("RiskTime:" + riskTime);
+           Logger.info("riskDetailCode:" + riskDetailCode);
+           if ("11".equals(riskDetailCode)&&riskTime>= Tools.getAddYear(-2)){
+               Logger.info("规则");
+               return Boolean.TRUE;
+           }
+       }
+    }
+
+    return Boolean.FALSE;
+}
+
+rule "D375"
+    when
+    $ruleResultDTO:RuleResultDTO();
+    $dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationD375(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+    then
+    Map extraMap = new HashMap();
+    extraMap.put("testMap",123);
+    $ruleResultDTO.setResult(Tools.HIT);
+    $ruleResultDTO.setExtraResultMap(extraMap);
+    $dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end

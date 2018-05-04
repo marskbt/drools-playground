@@ -1,0 +1,90 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+import java.math.BigDecimal;
+
+function String doJYCalc(String borrowAmount){
+    String calc = null;
+		switch (borrowAmount) {
+		case "-7":
+			calc = "0.05";
+			break;
+		case "-6":
+			calc = "0.15";
+			break;
+		case "-5":
+			calc = "0.25";
+			break;
+		case "-4":
+			calc = "0.35";
+			break;
+		case "-3":
+			calc = "0.5";
+			break;
+        case "-2":
+			calc = "0.7";
+			break;
+		case "-1":
+			calc = "0.9";
+			break;
+		case "0":
+			calc = "0";
+			break;
+		case "1":
+			calc = "1.5";
+			break;
+		default:
+			break;
+		}
+		return calc;
+}
+
+function Boolean doValidationT334(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    if(!Tools.isRuleCodeOK(ruleId,"T334")){
+        return Boolean.FALSE;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+    if(obj != null && obj.get("status") != null){
+        String status = obj.getString("status");
+        double boorCalc = 0;
+        if(!status.equals("0")){
+            for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getString("borrowAmount")!=null && arrayObj.getString("borrowState")!=null ){
+                    String borrowAmount = arrayObj.getString("borrowAmount");
+                    String borrowState = arrayObj.getString("borrowState");
+                    if(borrowState.equals("2")){
+                    if (Double.valueOf(borrowAmount) <= 1) {
+						String borrowAmountCalc = doJYCalc(borrowAmount);
+						BigDecimal bigDec = new BigDecimal(borrowAmountCalc);
+						boorCalc = bigDec.doubleValue() + boorCalc;
+					} else {
+						Double boor = Double.valueOf(borrowAmount);
+						boorCalc = (2 * boor - 1) + boorCalc;
+					}
+					Logger.info("************** boorCalc:"+boorCalc);
+                    }
+                   
+                }
+            }
+            if (Double.valueOf(boorCalc) >= 6){
+                return Boolean.TRUE;
+            }
+            }else{
+            return Boolean.FALSE;
+        }
+    }
+    return Boolean.FALSE;
+}
+
+rule "T334"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationT334(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

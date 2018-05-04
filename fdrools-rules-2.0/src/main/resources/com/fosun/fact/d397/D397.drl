@@ -1,0 +1,46 @@
+package com.fosun.fact.d397;
+
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+function Boolean doValidationD397(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+    Logger.info("执行 D397");
+    if(!Tools.isRuleCodeOK(ruleCode,"D397")){
+        return Boolean.FALSE;
+    }
+    
+    JSONObject creditCommonRequestBody = paramDataDTO.getCreditCommonRequestBody();
+    if(creditCommonRequestBody!=null){
+        String applyAmtStr = creditCommonRequestBody.getString("applyAmt");
+        if(applyAmtStr!=null && (!"".equals(applyAmtStr))){
+           Double applyAmt = Double.valueOf(applyAmtStr);
+           if(applyAmt > 500000 ){
+               return Boolean.TRUE;
+           }
+        }
+    }
+    
+    return Boolean.FALSE;
+}
+
+rule "D397"
+when
+
+$ruleResultDTO:RuleResultDTO();
+$dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationD397(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+then
+
+Map<String,Object> extraMap = new HashMap<String,Object>();
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleResultDTO.setExtraResultMap(extraMap);
+$dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end

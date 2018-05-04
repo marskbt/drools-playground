@@ -1,0 +1,41 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD318(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D318")){
+        return Boolean.FALSE;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+    if(obj != null && obj.get("status") != null){
+        String status = obj.getString("status");
+        if(!status.equals("0")){
+            for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getInteger("repayState")!=null){
+                    Integer repayState = arrayObj.getInteger("repayState");
+                    if(repayState >= 4 && repayState <9 ){
+                      return Boolean.TRUE;
+                    }
+                }
+            }
+        }else{
+            return Boolean.FALSE;
+        }
+    }
+    return Boolean.FALSE;
+}
+
+rule "D318"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD318(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

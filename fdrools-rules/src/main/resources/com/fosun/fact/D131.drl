@@ -1,0 +1,32 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD131(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D131")){
+        return Boolean.FALSE;
+    }
+    
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    if(obj != null && obj.getString("matchingResult") != null){
+        String matchingResult = obj.getString("matchingResult");
+        if(!matchingResult.equals ("一致")){
+            return Boolean.TRUE;
+        }
+       
+    }
+    return Boolean.FALSE;
+}
+
+rule "D131"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD131(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

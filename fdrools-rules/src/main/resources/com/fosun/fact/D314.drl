@@ -1,0 +1,35 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD314(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D314")){
+        return false;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    Logger.info("RuleId = " + ruleId + "  ** "+ ruleParamHolderDTO.getSoloParam().getInteger("score"));
+        // 如果海鑫分数在100~299：量富不良分=海鑫分数/10+70，舍弃小数点后数据。（80~99分）（犯罪嫌疑人、吸毒）
+        if(obj.get("score")!=null){
+             Integer score = obj.getInteger("score");
+             if(score >= 100 && score <= 399){
+                 return Boolean.TRUE;
+             }
+        }
+    
+    return Boolean.FALSE;
+}
+
+rule "D314"
+salience -1
+no-loop true
+lock-on-active true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD314(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

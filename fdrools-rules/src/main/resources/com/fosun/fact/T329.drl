@@ -1,0 +1,50 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationT329(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"T329")){
+        return Boolean.FALSE;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+    if(obj != null && obj.get("status") != null){
+        String status = obj.getString("status");
+        if(!status.equals("0")){
+            Integer count = 0;
+            for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getString("borrowType")!=null && arrayObj.getString("borrowState")!=null ){
+                    String borrowType = arrayObj.getString("borrowType");
+                    String borrowState = arrayObj.getString("borrowState");
+                    if(borrowType.equals("4") && borrowState.equals("1")){
+                        count = count+1;
+                    }
+                }
+            }
+            if(count > 0){
+                Map<String,Object> extraMap = new HashMap<String,Object>();
+                extraMap.put("count",count);
+                ruleResultDTO.setExtraResultMap(extraMap);
+                return Boolean.TRUE;
+            }
+            
+        }else{
+            return Boolean.FALSE;
+        }
+    }
+    return Boolean.FALSE;
+}
+
+rule "T329"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationT329(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

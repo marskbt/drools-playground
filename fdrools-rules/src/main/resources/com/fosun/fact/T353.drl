@@ -1,0 +1,35 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationT353(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"T353")){
+        return Boolean.FALSE;
+    }
+    
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+        for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getString("suspOrgType")!=null &&  arrayObj.getInteger("yearGap") != null){
+                    String suspOrgType = arrayObj.getString("suspOrgType");
+                    Integer yearGap = arrayObj.getInteger("yearGap");
+                    if(suspOrgType.equals("线上经营贷") && yearGap <=2 ){
+                        return Boolean.TRUE;
+                    }
+                }
+            }
+    return Boolean.FALSE;
+}
+
+rule "T353"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationT353(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

@@ -1,0 +1,60 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.Tools;
+
+
+function boolean isParamMapOK(Map paramMap){
+    
+   return Tools.isParamMapOK(paramMap);
+   
+}
+
+function Integer toInteger(Map paramMap,String key){
+    
+    return Tools.toInteger(paramMap,key);
+}
+
+function String toString(Map paramMap,String key){
+    
+    return Tools.toString(paramMap,key);
+}
+
+function Long toLong(Map paramMap,String key){
+    
+    return Tools.toLong(paramMap,key);
+}
+
+function Short toShort(Map paramMap,String key){
+    
+    return Tools.toShort(paramMap,key);
+}
+
+
+function Double toDouble(Map paramMap,String key){
+    
+    return Tools.toDouble(paramMap,key);
+}
+
+//海鑫不良分转换为量富不良分
+function Integer getHxBadScore(Integer badScore,String identity) {
+    Integer resultScore = 0;
+    if(badScore!=null && identity!=null){
+    if(badScore >= 300 && badScore <= 499){
+        // 如果海鑫分数在300~499：量富不良分=海鑫分数/10+30，舍弃小数点后数据。（60~79分）（前科、涉案）
+        resultScore = badScore / 10 + 30;
+        
+    }else if(badScore >= 100 && badScore <= 299){
+        // 如果海鑫分数在100~299：量富不良分=海鑫分数/10+70，舍弃小数点后数据。（80~99分）（犯罪嫌疑人、吸毒）
+        resultScore = badScore / 10 + 70;
+        
+    }else{
+        // 其他情况：量富不良分=客户身份证倒数第三、第四位*0.6，舍弃小数点后数据。（0~59）
+        int identityLength = identity.length();
+        // 截取身份证倒数第3、4位
+        String subIndentity = identity.substring(identityLength - 4, identityLength - 2);
+        resultScore = (int)(Integer.parseInt(subIndentity) * 0.6);
+        }
+    }
+    return resultScore;
+}
+

@@ -1,0 +1,56 @@
+package com.fosun.fact.t302;
+
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import com.alibaba.fastjson.JSONArray;
+
+function Boolean doValidationT302(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+   Logger.info(" 执行  T302");
+    if(!Tools.isRuleCodeOK(ruleCode,"T302")){
+        return Boolean.FALSE;
+    }
+    
+    if(!ruleDataSourceMap.isEmpty()){
+       RuleDataSourceDTO fhSxDataSource = (RuleDataSourceDTO)ruleDataSourceMap.get("FHCpws");
+       JSONArray array = (JSONArray)fhSxDataSource.getDsRes();
+       JSONObject reqObj = (JSONObject)fhSxDataSource.getDsReq();
+       if(array != null && array.size()>0){
+           for(int i =0;i<array.size();i++){
+               JSONObject object = (JSONObject) array.get(i);
+               if("cpws".equals(object.getString("dataType"))){
+                    boolean flag = Tools.result(object.getString("matchratio"),object.getString("sortTimeString"),5); 
+                    boolean flagStatus = Tools.checkPersonPartyStatus(reqObj.getString("personName"),object.getString("partys"));
+                    if(flag&&flagStatus){
+                        return Boolean.TRUE;
+                    }
+               }
+           }
+       }
+    }
+    
+    return Boolean.FALSE;
+}
+
+rule "T302"
+when
+
+$ruleResultDTO:RuleResultDTO();
+$dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationT302(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+then
+
+Map<String,Object> extraMap = new HashMap<String,Object>();
+extraMap.put("testMap",123);
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleResultDTO.setExtraResultMap(extraMap);
+$dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end
+

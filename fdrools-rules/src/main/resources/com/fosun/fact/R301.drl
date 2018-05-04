@@ -1,0 +1,36 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationR301(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"R301")){
+        return Boolean.FALSE;
+    }
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+            for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getInteger("yearGap")!=null && arrayObj.getInteger("nameFlag")!=null){
+                    Integer yearGap = arrayObj.getInteger("yearGap");
+                    Integer nameFlag = arrayObj.getInteger("nameFlag");
+                    if(nameFlag == 1 && yearGap <= 2){
+                      return Boolean.TRUE;
+                    }
+                }
+            }
+        
+    
+    return Boolean.FALSE;
+}
+
+rule "R301"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationR301(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

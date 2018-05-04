@@ -1,0 +1,32 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD304(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+   
+    if(!Tools.isRuleCodeOK(ruleId,"D304")){
+        return false;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+        if(obj.get("onLineStatus")!=null){
+             String onLineStatus = obj.getString("onLineStatus");
+             if(!("0".equals(onLineStatus) || "10000004".equals(onLineStatus))){
+                 return Boolean.TRUE;
+             }
+        }
+    
+    return Boolean.FALSE;
+}
+
+rule "D304"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD304(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

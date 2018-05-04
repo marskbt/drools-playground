@@ -1,0 +1,66 @@
+package com.fosun.fact.t351;
+
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSON;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Date;
+
+function Boolean doValidationT351(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+    Logger.info("执行 T351");
+    if(!Tools.isRuleCodeOK(ruleCode,"T351")){
+        return Boolean.FALSE;
+    }
+    
+     if(!ruleDataSourceMap.isEmpty()){
+       RuleDataSourceDTO jxlMIDataSource = (RuleDataSourceDTO)ruleDataSourceMap.get("JxlMI");
+       JSONObject resObj = (JSONObject)jxlMIDataSource.getDsRes();
+       String userPhoneSuspicion =  resObj.getString("userPhoneSuspicion");
+       JSONObject jsonObject = JSON.parseObject(userPhoneSuspicion);
+       if (jsonObject != null && jsonObject.containsKey("phone_applied_in_orgs")) {
+                // 电话号码在哪些类型的机构中使用过 数据
+                JSONArray phoneAppliedInOrgs = jsonObject.getJSONArray("phone_applied_in_orgs");
+                if (phoneAppliedInOrgs != null && phoneAppliedInOrgs.size() > 0) {
+                    for (int i = 0; i < phoneAppliedInOrgs.size(); i++) {
+                        // 获取机构json对象
+                        JSONObject jsonOrg = phoneAppliedInOrgs.getJSONObject(i);
+                        // 获取机构名称
+                        if (jsonOrg != null && jsonOrg.containsKey("susp_org_type")) {
+                            String suspOrgType = jsonOrg.getString("susp_org_type");
+                            Date updt = Tools.stringToDate(jsonOrg.getString("susp_updt"), DateStyle.YYYY_MM_DD_HH_MM_SS);
+                            Date now = Tools.addYear(new Date(), -2);
+                            if ("线下信用现金贷".equals(suspOrgType) && updt.after(now)) {
+                                
+                                return Boolean.TRUE; 
+                            }
+                        }
+                    }
+                }
+            }
+	
+    }
+    
+    return Boolean.FALSE;
+}
+
+rule "T351"
+when
+
+$ruleResultDTO:RuleResultDTO();
+$dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationT351(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+then
+
+Map<String,Object> extraMap = new HashMap<String,Object>();
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleResultDTO.setExtraResultMap(extraMap);
+$dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end

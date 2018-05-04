@@ -1,0 +1,45 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD317(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D317")){
+        return Boolean.FALSE;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+    if(obj != null && obj.get("status") != null){
+        String status = obj.getString("status");
+        if(!status.equals("0")){
+            int count  = 0;
+            for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getInteger("monthGap")!=null){
+                    Integer monthGap = arrayObj.getInteger("monthGap");
+                    if(monthGap <= 3){
+                       count  = count +1;
+                       if(count >= 5){
+                           return Boolean.TRUE;
+                       }
+                    }
+                }
+            }
+        }else{
+            return Boolean.FALSE;
+        }
+    }
+    return Boolean.FALSE;
+}
+
+rule "D317"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD317(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

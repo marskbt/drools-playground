@@ -1,0 +1,35 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationT349(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"T349")){
+        return Boolean.FALSE;
+    }
+    
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+        for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getString("suspOrgType")!=null &&  arrayObj.getInteger("yearGap") != null){
+                    String suspOrgType = arrayObj.getString("suspOrgType");
+                    Integer yearGap = arrayObj.getInteger("yearGap");
+                    if(suspOrgType.equals("线下消费分期") && yearGap <=2 ){
+                        return Boolean.TRUE;
+                    }
+                }
+            }
+    return Boolean.FALSE;
+}
+
+rule "T349"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationT349(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

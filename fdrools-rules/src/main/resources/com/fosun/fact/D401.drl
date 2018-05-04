@@ -1,0 +1,50 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD401(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D401")){
+        return Boolean.FALSE;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+    if(obj != null && obj.get("status") != null){
+        String status = obj.getString("status");
+        if(!status.equals("0")){
+            int count  = 0;
+            int refuseCount = 0;
+            for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getInteger("monthGap")!=null){
+                    Integer monthGap = arrayObj.getInteger("monthGap");
+                    String borrowState = arrayObj.getString("borrowState");
+                    if(monthGap <= 3){
+                       count  = count +1;
+                       if("1".equals(borrowState)){
+                            refuseCount++;
+                        }
+                       if(count >= 5 && refuseCount >= 2){
+                           return Boolean.TRUE;
+                       }
+                    }
+                }
+            }
+        }else{
+            return Boolean.FALSE;
+        }
+    }
+    return Boolean.FALSE;
+}
+
+rule "D401"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD401(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

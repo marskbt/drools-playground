@@ -1,0 +1,9 @@
+package com.fosun.fact;
+
+rule "D322"
+
+when 
+$map:CommParamMapFact(isParamMapOK (paramMap) && toInteger(paramMap,"shmBlackList")!=null && toInteger(paramMap,"shmBlackList")>=1 )
+then
+$map.setResult(1);
+end

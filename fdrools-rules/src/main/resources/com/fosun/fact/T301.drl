@@ -1,0 +1,35 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationT301(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"T301")){
+        return Boolean.FALSE;
+    }
+    
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+        for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getDouble("matchRatio")!=null && arrayObj.getString("lxqk")!=null){
+                    Double matchRatio = arrayObj.getDouble("matchRatio");
+                    String lxqk = arrayObj.getString("lxqk");
+                    if(matchRatio  >= 0.5 && matchRatio < 0.8 && !lxqk.equals("全部已履行")){
+                        return Boolean.TRUE;
+                    }
+                }
+            }
+    return Boolean.FALSE;
+}
+
+rule "T301"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationT301(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

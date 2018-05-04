@@ -1,0 +1,44 @@
+package com.fosun.fact.p303;
+
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONArray;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+function Boolean doValidationP303(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+    Logger.info("执行 P303");
+    if(!Tools.isRuleCodeOK(ruleCode,"P303")){
+        return Boolean.FALSE;
+    }
+    
+    JSONObject nonStandardData = paramDataDTO.getNonStandardData();
+    if(nonStandardData!=null){
+        Integer loanCount = nonStandardData.getInteger("loanCount");
+        if(loanCount!=null && loanCount>=2){
+            return Boolean.TRUE;
+        }
+    }
+    
+    return Boolean.FALSE;
+}
+
+rule "P303"
+when
+
+$ruleResultDTO:RuleResultDTO();
+$dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationP303(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+then
+
+Map<String,Object> extraMap = new HashMap<String,Object>();
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleResultDTO.setExtraResultMap(extraMap);
+$dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end

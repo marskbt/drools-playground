@@ -1,0 +1,48 @@
+package com.fosun.fact.d316;
+
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+function Boolean doValidationD316(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+    Logger.info(" 执行  D316 S1");
+    if(!Tools.isRuleCodeOK(ruleCode,"D316")){
+        return Boolean.FALSE;
+    }
+    Logger.info(" 执行  D316 S2");
+    
+    if(!ruleDataSourceMap.isEmpty()){
+       RuleDataSourceDTO afDataSource = (RuleDataSourceDTO)ruleDataSourceMap.get("AF");
+       JSONObject resObj = (JSONObject)afDataSource.getDsRes();
+       Integer overdueTimes180Val = Integer.valueOf(resObj.getShort("overdueTimes180"));
+       Logger.info(" overdueTimes180Val = " + overdueTimes180Val);
+       if(overdueTimes180Val>=1){
+           return Boolean.TRUE;
+       }
+    }else{
+       Logger.info(" 执行  D316 S3"); 
+    }
+     Logger.info(" 执行  D316 S4");
+    return Boolean.FALSE;
+}
+
+rule "D316"
+when
+
+$ruleResultDTO:RuleResultDTO();
+$dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationD316(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+then
+
+Map<String,Object> extraMap = new HashMap<String,Object>();
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleResultDTO.setExtraResultMap(extraMap);
+$dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end

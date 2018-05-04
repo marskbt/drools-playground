@@ -1,0 +1,38 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD402(String product,String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D402")){
+        return Boolean.FALSE;
+    }
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    if(obj != null && obj.getInteger("age") != null){
+        Integer age = obj.getInteger("age");
+        if("yonglunETC".equals(product)){
+            if(age >= 55 || age <= 20){
+                return Boolean.TRUE;
+            }
+        }else{
+            if(age >= 50 || age <= 25){
+                return Boolean.TRUE;
+            }
+        }
+       
+    }
+    return Boolean.FALSE;
+}
+
+rule "D402"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD402(product,ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

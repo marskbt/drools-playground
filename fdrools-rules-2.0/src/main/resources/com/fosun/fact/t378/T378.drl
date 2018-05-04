@@ -1,0 +1,66 @@
+package com.fosun.fact.t378;
+
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+function Boolean doValidationT378(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+   Logger.info(" 执行  T378");
+    if(!Tools.isRuleCodeOK(ruleCode,"T378")){
+        return Boolean.FALSE;
+    }
+    if(paramDataDTO.getCreditCommonRequestBody()!=null){
+        JSONObject creditCommonRequestBody = paramDataDTO.getCreditCommonRequestBody();
+        String province = creditCommonRequestBody.getString("province");
+        String city = creditCommonRequestBody.getString("city");
+        if(province == null || "".equals(province) || city == null || "".equals(city)){
+            if((province == null || "".equals(province)) && (city == null || "".equals(city))){
+                return Boolean.FALSE;
+            }else{
+                return Boolean.TRUE;
+            }
+        }
+        
+    if(!ruleDataSourceMap.isEmpty()){
+       RuleDataSourceDTO geoDataSource = (RuleDataSourceDTO)ruleDataSourceMap.get("GEO_B11");
+       if(geoDataSource!=null){
+        JSONArray jsonArray = (JSONArray)geoDataSource.getDsRes();
+        JSONObject jsonObject = jsonArray.getJSONObject(0);
+        String mobileOwnership = jsonObject.getString("mobileOwnership");
+        if (mobileOwnership.contains(city) && mobileOwnership.contains(province)) {
+           return Boolean.FALSE;
+       }else{
+           return Boolean.TRUE;
+       }
+       }
+    }
+        
+        
+    }
+    
+    
+    
+    return Boolean.FALSE;
+}
+
+rule "T378"
+when
+
+$ruleResultDTO:RuleResultDTO();
+$dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationT378(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+then
+
+Map<String,Object> extraMap = new HashMap<String,Object>();
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleResultDTO.setExtraResultMap(extraMap);
+$dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end

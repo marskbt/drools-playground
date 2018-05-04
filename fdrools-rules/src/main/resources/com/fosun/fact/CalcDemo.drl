@@ -1,0 +1,108 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+import java.text.DecimalFormat;
+
+function Boolean doValidationCalcDemo(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    DecimalFormat df = new DecimalFormat("######0.0000"); 
+    
+    if(!Tools.isRuleCodeOK(ruleId,"CalcDemo")){
+        return Boolean.FALSE;
+    }
+    
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+        
+                if(
+                   obj.getDouble("m1")!=null 
+                 &&obj.getDouble("m2")!=null 
+                 &&obj.getDouble("m3")!=null 
+                 &&obj.getDouble("m4")!=null 
+                 &&obj.getDouble("m5")!=null 
+                 &&obj.getDouble("m6")!=null 
+                 &&obj.getDouble("m7")!=null 
+                 &&obj.getDouble("m8")!=null 
+                 &&obj.getDouble("m9")!=null 
+                 &&obj.getDouble("m10")!=null 
+                 &&obj.getDouble("m11")!=null 
+                 &&obj.getDouble("m12")!=null 
+                 &&obj.getDouble("m13")!=null 
+                 &&obj.getDouble("m14")!=null 
+                 &&obj.getDouble("m15")!=null 
+                 &&obj.getDouble("m16")!=null 
+                 &&obj.getDouble("m17")!=null 
+                 &&obj.getDouble("m18")!=null 
+                 &&obj.getDouble("m19")!=null 
+                 &&obj.getDouble("m20")!=null 
+                 &&obj.getDouble("m21")!=null 
+                 &&obj.getDouble("m22")!=null 
+                 &&obj.getDouble("m23")!=null 
+                 &&obj.getDouble("m24")!=null 
+                 ){
+                    Double m1Val =  obj.getDouble("m1");
+                    Double m2Val =  obj.getDouble("m2");
+                    Double m3Val =  obj.getDouble("m3");
+                    Double m4Val =  obj.getDouble("m4");
+                    Double m5Val =  obj.getDouble("m5");
+                    Double m6Val =  obj.getDouble("m6");
+                    Double m7Val =  obj.getDouble("m7");
+                    Double m8Val =  obj.getDouble("m8");
+                    Double m9Val =  obj.getDouble("m9");
+                    Double m10Val =  obj.getDouble("m10");
+                    Double m11Val =  obj.getDouble("m11");
+                    Double m12Val =  obj.getDouble("m12");
+                    Double m13Val =  obj.getDouble("m13");
+                    Double m14Val =  obj.getDouble("m14");
+                    Double m15Val =  obj.getDouble("m15");
+                    Double m16Val =  obj.getDouble("m16");
+                    Double m17Val =  obj.getDouble("m17");
+                    Double m18Val =  obj.getDouble("m18");
+                    Double m19Val =  obj.getDouble("m19");
+                    Double m20Val =  obj.getDouble("m20");
+                    Double m21Val =  obj.getDouble("m21");
+                    Double m22Val =  obj.getDouble("m22");
+                    Double m23Val =  obj.getDouble("m23");
+                    Double m24Val =  obj.getDouble("m24");
+                    
+                    Double avg_m1_3 = doAvag(m1Val + m2Val + m3Val , 3.0);
+                    Double avg_m1_6 = doAvag(m1Val + m2Val + m3Val + m4Val + m5Val + m6Val , 6.0);
+                    Double avg_m1_9 = doAvag(m1Val + m2Val + m3Val + m4Val + m5Val + m6Val + m7Val + m8Val + m9Val , 9.0);
+                    Double avg_m1_12 = doAvag(m1Val + m2Val + m3Val + m4Val + m5Val + m6Val + m7Val + m8Val + m9Val + m10Val + m11Val + m12Val ,12.0);
+                    
+                    Double avg_m13_15 = doAvag(m13Val + m14Val + m15Val , 3.0);
+                    Double avg_m13_18 = doAvag(m13Val + m14Val + m15Val + m16Val + m17Val + m18Val , 6.0);
+                    Double avg_m13_21 = doAvag(m13Val + m14Val + m15Val + m16Val + m17Val + m18Val + m19Val + m20Val + m21Val , 9.0);
+                    Double avg_m13_24 = doAvag(m13Val + m14Val + m15Val + m16Val + m17Val + m18Val + m19Val + m20Val + m21Val + m22Val + m23Val + m24Val ,12.0);
+                    
+                    Double gap1 = (avg_m1_3 - avg_m13_15 )/avg_m13_15;
+                    Double gap2 = (avg_m1_6 - avg_m13_18 )/avg_m13_18;
+                    Double gap3 = (avg_m1_9 - avg_m13_21 )/avg_m13_21;
+                    Double gap4 = (avg_m1_12 - avg_m13_24 )/avg_m13_24;
+                    
+                    Map<String,Object> extraMap = new HashMap<>();
+                    extraMap.put("gap1",df.format(gap1));
+                    extraMap.put("gap2",df.format(gap2));
+                    extraMap.put("gap3",df.format(gap3));
+                    extraMap.put("gap4",df.format(gap4));
+                
+                    ruleResultDTO.setExtraResultMap(extraMap);
+                  }
+    return Boolean.TRUE;
+}
+
+function Double doAvag(Double totalVal,Double divider){
+    Double resultVal = totalVal/divider;
+    return resultVal;
+}
+
+rule "CalcDemo"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationCalcDemo(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

@@ -1,0 +1,31 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD338(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D338")){
+        return Boolean.FALSE;
+    }
+    
+    JSONObject obj = ruleParamHolderDTO.getSoloParam();
+    if(obj != null && obj.getString("mobile") != null){
+        String mobile = obj.getString("mobile");
+        if(mobile.startsWith("170") || mobile.startsWith("171")){
+            return Boolean.TRUE;
+        }
+    }
+    return Boolean.FALSE;
+}
+
+rule "D338"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD338(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

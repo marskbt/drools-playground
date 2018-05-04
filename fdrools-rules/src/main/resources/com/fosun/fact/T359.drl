@@ -1,0 +1,39 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationT359(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"T359")){
+        return Boolean.FALSE;
+    }
+    
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+    Integer count = 0;
+        for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getInteger("nameFlag")!=null &&  arrayObj.getInteger("yearGap") != null){
+                    Integer nameFlag =arrayObj.getInteger("nameFlag");
+                    Integer yearGap = arrayObj.getInteger("yearGap");
+                    if(nameFlag == 1 && yearGap <=2 ){
+                        count = count + 1;
+                    }
+                    if(count > 1){
+                        return Boolean.TRUE;
+                    }
+                }
+            }
+    return Boolean.FALSE;
+}
+
+rule "T359"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationT359(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

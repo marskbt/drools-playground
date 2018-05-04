@@ -1,0 +1,77 @@
+package com.fosun.fact.d390;
+
+import com.fosun.fdrools.tools.*;
+import com.fosun.fdrools.tools.dto.RuleDataSourceDTO;
+import com.fosun.fdrools.tools.dto.RuleCommonDTO;
+import com.fosun.fdrools.tools.dto.RuleParamDataDTO;
+import com.fosun.fdrools.tools.dto.DynamicRuleInfoDTO;
+
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSON;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+function  Boolean doValidationD390(String ruleCode,RuleCommonDTO commonDTO,RuleParamDataDTO paramDataDTO,Map ruleDataSourceMap,RuleResultDTO resultDTO){
+   Logger.info(" 执行  D390");
+    if(!Tools.isRuleCodeOK(ruleCode,"D390")){
+        return Boolean.FALSE;
+    }
+    Logger.info(" ruleCode= "+JSON.toJSONString(ruleCode));
+    Logger.info(" RuleCommonDTO= "+JSON.toJSONString(commonDTO));
+    Logger.info(" RuleParamDataDTO= "+JSON.toJSONString(paramDataDTO));
+    Logger.info(" ruleDataSourceMap= "+JSON.toJSONString(ruleDataSourceMap));
+    Logger.info(" RuleResultDTO= "+JSON.toJSONString(resultDTO));
+    String companyName = "";
+    JSONObject creditCommonRequestBody = paramDataDTO.getCreditCommonRequestBody();
+    if(creditCommonRequestBody!=null){
+        companyName = creditCommonRequestBody.getString("companyName");
+    }
+
+    if(!ruleDataSourceMap.isEmpty()){
+       RuleDataSourceDTO fhDataSource = (RuleDataSourceDTO)ruleDataSourceMap.get("FHCompanyKtgg");
+       JSONArray array = (JSONArray)fhDataSource.getDsRes();
+      
+       if (array==null&&array.size()<=0){
+            return Boolean.FALSE;
+       }
+       for (int i=0;i<array.size();i++){
+           Boolean flag = Boolean.FALSE;
+           Boolean checkFlag = Boolean.FALSE;
+           JSONObject jsonObject = array.getJSONObject(i);
+           String dataType = jsonObject.getString("dataType");
+           if("ktgg".equals(dataType)){
+            String sortTimeString = jsonObject.getString("sortTimeString");
+            if(sortTimeString!=null && (!"".equals(sortTimeString))){
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+                Date sortTime = sdf.parse(sortTimeString);
+                Date nowTime = new Date();
+                flag = Tools.getMonthSpace(sortTime,nowTime) <= 6;
+            }
+             String defendant = jsonObject.getString("defendant");
+             if(defendant!=null && defendant.contains("被告") && defendant.contains(companyName)){
+                checkFlag = Boolean.TRUE;
+            }
+            if(checkFlag && flag){
+                return Boolean.TRUE;
+            }
+          }
+       }
+    }
+
+    return Boolean.FALSE;
+}
+
+rule "D390"
+    when
+    $ruleResultDTO:RuleResultDTO();
+    $dynamicRuleInfoDTO:DynamicRuleInfoDTO(doValidationD390(ruleCode,ruleCommonDTO,ruleParamDataDTO,ruleDataSourceMap,$ruleResultDTO));
+    then
+    Map extraMap = new HashMap();
+    $ruleResultDTO.setResult(Tools.HIT);
+    $ruleResultDTO.setExtraResultMap(extraMap);
+    $dynamicRuleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end

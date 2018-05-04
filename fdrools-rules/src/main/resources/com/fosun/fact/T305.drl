@@ -1,0 +1,36 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationT305(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"T305")){
+        return Boolean.FALSE;
+    }
+    
+    List<JSONObject> jsonList = ruleParamHolderDTO.getArrayParams();
+        for(JSONObject arrayObj:jsonList){
+                if(arrayObj.getDouble("matchRatio")!=null && arrayObj.getInteger("monthGap")!=null && arrayObj.getInteger("checkFlag")!=null){
+                    Double matchRatio = arrayObj.getDouble("matchRatio");
+                    Integer monthGap = arrayObj.getInteger("monthGap");
+                    Integer checkFlag = arrayObj.getInteger("checkFlag");
+                    if(matchRatio  >= 0.8 && monthGap > 6 && monthGap <= 12 && checkFlag == 1 ){
+                        return Boolean.TRUE;
+                    }
+                }
+            }
+    return Boolean.FALSE;
+}
+
+rule "T305"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationT305(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;

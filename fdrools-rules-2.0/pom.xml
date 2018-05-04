@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.fosun</groupId>
+  <artifactId>fdrools-rules-2.0</artifactId>
+  <version>1.0.0</version>
+  <name>fdrools-rules-2.0</name>
+  <description>复星规则引擎-规则定义-2.0</description>
+  <repositories>
+    <repository>
+      <id>guvnor-m2-repo</id>
+      <name>Guvnor M2 Repo</name>
+      <url>http://10.166.15.151:20090/kie-web/maven2/</url>
+    </repository>
+  </repositories>
+</project>

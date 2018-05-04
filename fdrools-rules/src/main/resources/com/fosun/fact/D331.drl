@@ -1,0 +1,12 @@
+package com.fosun.fact;
+
+rule "D331"
+
+when 
+$map:CommParamMapFact(isParamMapOK (paramMap) 
+&& toString(paramMap,"identity")!=null 
+&& (toString(paramMap,"identity").startsWith("3522") || toString(paramMap,"identity").startsWith("3509") ))
+
+then
+$map.setResult(1);
+end

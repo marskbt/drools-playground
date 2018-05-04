@@ -1,0 +1,31 @@
+package com.fosun.fact;
+
+import com.fosun.fdrools.tools.*;
+
+function Boolean doValidationD315(String ruleId,RuleParamHolderDTO ruleParamHolderDTO, RuleResultDTO ruleResultDTO){
+    
+    
+    if(!Tools.isRuleCodeOK(ruleId,"D315")){
+        return Boolean.FALSE;
+    }
+    JSONObject soloParam = ruleParamHolderDTO.getSoloParam();
+    if(soloParam != null && soloParam.get("overdueTimes90") != null){
+        Integer overdueTimes90 = soloParam.getInteger("overdueTimes90");
+        if(overdueTimes90 >= 1){
+            return Boolean.TRUE;
+        }
+    }
+    return Boolean.FALSE;
+}
+
+rule "D315"
+salience -1
+no-loop true
+when
+$ruleResultDTO:RuleResultDTO();
+$ruleInfoDTO:RuleInfoDTO(doValidationD315(ruleCode,ruleParamHolderDTO,$ruleResultDTO));
+
+then
+$ruleResultDTO.setResult(Tools.HIT);
+$ruleInfoDTO.setRuleResultDTO($ruleResultDTO);
+end;
